@@ -1,0 +1,15 @@
+name: 'Asana Integration'
+inputs:
+  action:
+    required: true
+  asana-secret:
+    required: true
+  asana-workspace-id:
+    required: true
+  asana-project-id:
+    required: true
+  asana-custom-field:
+    required: true
+runs:
+  using: 'node16'
+  main: 'dist/index.js'

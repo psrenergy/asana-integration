@@ -4,6 +4,7 @@ const asana = require('asana');
 
 const users = {
     'raphasampaio': '1204198676859382',
+    'iurysab': '1204225355671418'
 };
 
 async function get_user(assignee) {
@@ -14,6 +15,23 @@ async function get_user(assignee) {
         }
     }
     return null;
+}
+
+async function get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number) {
+    let query = {
+        'projects.all': asana_project_id,
+        'opt_pretty': true
+    };
+    query['custom_fields.' + asana_custom_field + '.value'] = issue_number;
+
+    let result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
+    if (result.data.length == 0) {
+        core.setFailed("Task not found");
+    } else if (result.data.length > 1) {
+        core.setFailed("More than one task found");
+    }
+
+    return result.data[0].gid;
 }
 
 async function open(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
@@ -29,13 +47,13 @@ async function open(asana_client, asana_workspace_id, asana_project_id, asana_cu
     task_custom_fields[asana_custom_field] = issue_number;
 
     await asana_client.tasks.createTask({
-        workspace: asana_workspace_id,
-        projects: [asana_project_id],
-        name: issue_title,
-        notes: issue_url,
-        assignee: task_assignee,
-        custom_fields: task_custom_fields,
-        pretty: true
+        'workspace': asana_workspace_id,
+        'projects': [asana_project_id],
+        'name': issue_title,
+        'notes': issue_url,
+        'assignee': task_assignee,
+        'custom_fields': task_custom_fields,
+        'pretty': true
     });
 }
 
@@ -44,24 +62,11 @@ async function close(asana_client, asana_workspace_id, asana_project_id, asana_c
 
     const issue_number = github.context.payload.issue.number.toString();
 
-    let query = {
-        'projects.all': asana_project_id,
-        opt_pretty: true
-    };
-    query['custom_fields.' + asana_custom_field + '.value'] = issue_number;
-
-    let result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
-    if (result.data.length == 0) {
-        core.setFailed("Task not found");
-    } else if (result.data.length > 1) {
-        core.setFailed("More than one task found");
-    }
-
-    const task_gid = result.data[0].gid;
+    const task_gid = await get_task(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
 
     await asana_client.tasks.updateTask(task_gid, {
-        completed: true,
-        pretty: true
+        'completed': true,
+        'pretty': true
     });
 }
 
@@ -71,27 +76,17 @@ async function edit(asana_client, asana_workspace_id, asana_project_id, asana_cu
     const issue_number = github.context.payload.issue.number.toString();
     const issue_title = github.context.payload.issue.title;
     const issue_assignee = github.context.payload.issue.assignee;
+    const issue_state = github.context.payload.issue.state;
 
-    let query = {
-        'projects.all': asana_project_id,
-        opt_pretty: true
-    };
-    query['custom_fields.' + asana_custom_field + '.value'] = issue_number;
-
-    let result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
-    if (result.data.length == 0) {
-        core.setFailed("Task not found");
-    } else if (result.data.length > 1) {
-        core.setFailed("More than one task found");
-    }
-
-    const task_gid = result.data[0].gid;
+    const task_gid = await get_task(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
     const task_assignee = await get_user(issue_assignee);
+    const task_completed = issue_state != null && issue_state == 'closed';
 
     await asana_client.tasks.updateTask(task_gid, {
-        name: issue_title,
-        assignee: task_assignee,
-        pretty: true
+        'name': issue_title,
+        'assignee': task_assignee,
+        'completed': task_completed,
+        'pretty': true
     });
 }
 

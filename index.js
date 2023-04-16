@@ -9,7 +9,7 @@ const users = {
 
 async function get_user(assignee) {
     if (assignee != null && assignee.hasOwnProperty('login')) {
-        const login = assignee.login;
+        const login = assignee.login.toLowerCase();
         if (users.hasOwnProperty(login)) {
             return users[login];
         } else {

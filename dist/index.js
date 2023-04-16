@@ -74556,13 +74556,13 @@ async function get_task_gid(asana_client, asana_workspace_id, asana_project_id, 
     };
     query['custom_fields.' + asana_custom_field + '.value'] = issue_number;
 
-    let result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
+    const result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
     if (result.data.length == 0) {
-        core.setFailed("Task not found");
+        console.log("Task not found");
+        return 0;
     } else if (result.data.length > 1) {
         core.setFailed("More than one task found");
     }
-
     return result.data[0].gid;
 }
 
@@ -74594,7 +74594,11 @@ async function close(asana_client, asana_workspace_id, asana_project_id, asana_c
 
     const issue_number = github.context.payload.issue.number.toString();
 
-    const task_gid = await get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
+    let task_gid = await get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
+    if (task_gid == 0) {
+        open(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
+        task_gid = await get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
+    }
 
     await asana_client.tasks.updateTask(task_gid, {
         'completed': true,
@@ -74610,7 +74614,12 @@ async function edit(asana_client, asana_workspace_id, asana_project_id, asana_cu
     const issue_assignee = github.context.payload.issue.assignee;
     const issue_state = github.context.payload.issue.state;
 
-    const task_gid = await get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
+    let task_gid = await get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
+    if (task_gid == 0) {
+        open(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
+        task_gid = await get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
+    }
+
     const task_assignee = await get_user(issue_assignee);
     const task_completed = issue_state != null && issue_state == 'closed';
 

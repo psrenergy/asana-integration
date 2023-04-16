@@ -2,7 +2,7 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 const asana = require('asana');
 
-const usernames = {
+const users = {
     'raphasampaio': '1204198676859382',
 };
 
@@ -16,14 +16,23 @@ async function open(asana_client, asana_workspace_id, asana_project_id, asana_cu
     let custom_fields = {};
     custom_fields[asana_custom_field] = issue_number;
 
-    await asana_client.tasks.createTask({
+    let task = {
         workspace: asana_workspace_id,
         projects: [asana_project_id],
         name: issue_title,
         notes: issue_url,
         custom_fields: custom_fields,
         pretty: true
-    });
+    };
+
+    if (github.context.payload.issue.hasOwnProperty('assignee')) {
+        const login = github.context.payload.issue.assignee.login;
+        if (users.hasOwnProperty(login)) {
+            task['assignee'] = users[login];
+        }
+    }
+
+    await asana_client.tasks.createTask(task);
 }
 
 async function close(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
@@ -71,10 +80,20 @@ async function edit(asana_client, asana_workspace_id, asana_project_id, asana_cu
     }
 
     const task_gid = result.data[0].gid;
-    await asana_client.tasks.updateTask(task_gid, {
+
+    let task = {
         name: issue_title,
         pretty: true
-    });
+    };
+
+    if (github.context.payload.issue.hasOwnProperty('assignee')) {
+        const login = github.context.payload.issue.assignee.login;
+        if (users.hasOwnProperty(login)) {
+            task['assignee'] = users[login];
+        }
+    }
+
+    await asana_client.tasks.updateTask(task_gid, task);
 }
 
 async function run() {

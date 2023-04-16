@@ -74592,7 +74592,7 @@ async function close(asana_client, asana_workspace_id, asana_project_id, asana_c
 
     const issue_number = github.context.payload.issue.number.toString();
 
-    const task_gid = await get_task(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
+    const task_gid = await get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
 
     await asana_client.tasks.updateTask(task_gid, {
         'completed': true,
@@ -74608,7 +74608,7 @@ async function edit(asana_client, asana_workspace_id, asana_project_id, asana_cu
     const issue_assignee = github.context.payload.issue.assignee;
     const issue_state = github.context.payload.issue.state;
 
-    const task_gid = await get_task(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
+    const task_gid = await get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
     const task_assignee = await get_user(issue_assignee);
     const task_completed = issue_state != null && issue_state == 'closed';
 

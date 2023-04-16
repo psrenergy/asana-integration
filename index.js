@@ -2,7 +2,7 @@ const core = require('@actions/core');
 const github = require('@actions/github');
 const asana = require('asana');
 
-async function opened(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
+async function open(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
     const issue_number = github.context.payload.issue.number.toString();
     const issue_url = github.context.payload.issue.html_url;
     const issue_title = github.context.payload.issue.title;
@@ -20,7 +20,7 @@ async function opened(asana_client, asana_workspace_id, asana_project_id, asana_
     });
 }
 
-async function closed(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
+async function close(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
     const issue_number = github.context.payload.issue.number.toString();
 
     let query = {
@@ -43,7 +43,7 @@ async function closed(asana_client, asana_workspace_id, asana_project_id, asana_
     });
 }
 
-async function edited(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
+async function edit(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
     const issue_number = github.context.payload.issue.number.toString();
     const issue_title = github.context.payload.issue.title;
 
@@ -77,12 +77,12 @@ async function run() {
         const asana_custom_field = core.getInput('asana-custom-field');
         const asana_client = asana.Client.create().useAccessToken(asana_secret);
 
-        if (action == 'opened') {
-            await opened(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
-        } else if (action == 'closed') {
-            await closed(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
-        } else if (action == 'edited') {
-            await edited(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
+        if (action == 'open') {
+            await open(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
+        } else if (action == 'close') {
+            await close(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
+        } else if (action == 'edit') {
+            await edit(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
         } else {
             core.setFailed("Invalid action");
         }

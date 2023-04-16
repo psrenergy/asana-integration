@@ -74542,6 +74542,8 @@ async function get_user(assignee) {
         const login = assignee.login;
         if (users.hasOwnProperty(login)) {
             return users[login];
+        } else {
+            core.setFailed(`User ${login} not found`);
         }
     }
     return null;

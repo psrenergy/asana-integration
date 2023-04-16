@@ -28,7 +28,6 @@ async function get_task_gid(asana_client, asana_workspace_id, asana_project_id, 
 
     const result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
     if (result.data.length == 0) {
-        console.log("Task not found");
         return 0;
     } else if (result.data.length > 1) {
         core.setFailed("More than one task found");

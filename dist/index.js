@@ -74532,7 +74532,13 @@ const core = __nccwpck_require__(2186);
 const github = __nccwpck_require__(5438);
 const asana = __nccwpck_require__(3565);
 
+const usernames = {
+    'raphasampaio': '1204198676859382',
+};
+
 async function open(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
+    console.log(github.context.payload);
+
     const issue_number = github.context.payload.issue.number.toString();
     const issue_url = github.context.payload.issue.html_url;
     const issue_title = github.context.payload.issue.title;
@@ -74551,6 +74557,8 @@ async function open(asana_client, asana_workspace_id, asana_project_id, asana_cu
 }
 
 async function close(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
+    console.log(github.context.payload);
+
     const issue_number = github.context.payload.issue.number.toString();
 
     let query = {
@@ -74574,6 +74582,8 @@ async function close(asana_client, asana_workspace_id, asana_project_id, asana_c
 }
 
 async function edit(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
+    console.log(github.context.payload);
+
     const issue_number = github.context.payload.issue.number.toString();
     const issue_title = github.context.payload.issue.title;
 

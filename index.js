@@ -101,7 +101,9 @@ async function edit(asana_client, asana_workspace_id, asana_project_id, asana_cu
 async function migrate(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
     console.log(github);
 
-    const octokit = github.getOctokit(myToken);
+    console.log(process.env.GITHUB_TOKEN);
+
+    const octokit = github.getOctokit();
 
 
     octokit.paginate(octokit.rest.issues.listForRepo, {})

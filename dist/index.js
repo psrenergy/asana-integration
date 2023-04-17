@@ -74536,7 +74536,8 @@ const users = {
     'raphasampaio': '1204198676859382',
     'iurysab': '1204225355671418',
     'storino': '1204285451098195',
-    'viniciusjusten': '1204414013512209'
+    'viniciusjusten': '1204414013512209',
+    'guilhermebodin': '1204391944334606'
 };
 
 async function get_user(assignee) {

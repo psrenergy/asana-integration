@@ -99,7 +99,7 @@ async function run() {
         const asana_secret = core.getInput('asana-secret');
         const asana_workspace_id = core.getInput('asana-workspace-id');
         const asana_project_id = core.getInput('asana-project-id');
-        const asana_custom_field = core.getInput('asana-custom-field');
+        const asana_custom_field = '1204412546956914';
         const asana_client = asana.Client.create().useAccessToken(asana_secret);
 
         if (action == 'open') {

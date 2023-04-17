@@ -27,9 +27,14 @@ async function get_task_gid(asana_client, asana_workspace_id, asana_project_id, 
     };
     query['custom_fields.' + asana_custom_field + '.value'] = issue_number;
 
-    const result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
+    let result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
     if (result.data.length == 0) {
-        core.setFailed("Task not found");
+        await wait(10000);
+        result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
+
+        if (result.data.length == 0) {
+            core.setFailed("Task not found");
+        }
     } else if (result.data.length > 1) {
         core.setFailed("More than one task found");
     }

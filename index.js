@@ -5,7 +5,8 @@ const asana = require('asana');
 const users = {
     'raphasampaio': '1204198676859382',
     'iurysab': '1204225355671418',
-    'storino': '1204285451098195'
+    'storino': '1204285451098195',
+    'viniciusjusten': '1204414013512209'
 };
 
 async function get_user(assignee) {

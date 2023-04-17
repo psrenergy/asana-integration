@@ -74534,7 +74534,8 @@ const asana = __nccwpck_require__(3565);
 
 const users = {
     'raphasampaio': '1204198676859382',
-    'iurysab': '1204225355671418'
+    'iurysab': '1204225355671418',
+    'storino': '1204285451098195'
 };
 
 async function get_user(assignee) {

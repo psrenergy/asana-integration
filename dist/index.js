@@ -74550,6 +74550,10 @@ async function get_user(assignee) {
     return null;
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number) {
     let query = {
         'projects.all': asana_project_id,
@@ -74559,7 +74563,7 @@ async function get_task_gid(asana_client, asana_workspace_id, asana_project_id, 
 
     let result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
     if (result.data.length == 0) {
-        await wait(10000);
+        await sleep(10000);
         result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
 
         if (result.data.length == 0) {

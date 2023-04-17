@@ -74541,7 +74541,7 @@ const users = {
     'pedroripper': '1204414685536664'
 };
 
-async function get_user(assignee) {
+function get_user(assignee) {
     if (assignee != null && assignee.hasOwnProperty('login')) {
         const login = assignee.login.toLowerCase();
         if (users.hasOwnProperty(login)) {
@@ -74579,8 +74579,6 @@ async function get_task_gid(asana_client, asana_workspace_id, asana_project_id, 
 }
 
 async function open(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
-    console.log(github.context.payload);
-
     const issue_number = github.context.payload.issue.number.toString();
     const issue_url = github.context.payload.issue.html_url;
     const issue_title = github.context.payload.issue.title;
@@ -74602,8 +74600,6 @@ async function open(asana_client, asana_workspace_id, asana_project_id, asana_cu
 }
 
 async function close(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
-    console.log(github.context.payload);
-
     const issue_number = github.context.payload.issue.number.toString();
 
     const task_gid = await get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
@@ -74615,8 +74611,6 @@ async function close(asana_client, asana_workspace_id, asana_project_id, asana_c
 }
 
 async function edit(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
-    console.log(github.context.payload);
-
     const issue_number = github.context.payload.issue.number.toString();
     const issue_title = github.context.payload.issue.title;
     const issue_assignee = github.context.payload.issue.assignee;
@@ -74632,6 +74626,10 @@ async function edit(asana_client, asana_workspace_id, asana_project_id, asana_cu
         'completed': task_completed,
         'pretty': true
     });
+}
+
+async function migrate(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
+    console.log(github.context.payload);
 }
 
 async function run() {
@@ -74650,6 +74648,8 @@ async function run() {
             await close(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
         } else if (action == 'edit') {
             await edit(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
+        } else if (action == 'migrate') {
+            await migrate(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
         } else {
             core.setFailed("Invalid action");
         }

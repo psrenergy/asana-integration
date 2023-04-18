@@ -111,7 +111,7 @@ class AsanaClient {
             if (core.isDebug()) {
                 core.debug(`createTask: task #${github_issue} already exists, updating it`);
             }
-            editTask(github_issue);
+            this.editTask(github_issue);
         }
     }
 
@@ -121,7 +121,7 @@ class AsanaClient {
             if (core.isDebug()) {
                 core.debug(`closeTask: task #${github_issue} not found, creating a new one`);
             }
-            createTask(github_issue);
+            this.createTask(github_issue);
             task_gid = this.findTask(github_issue.number);
         }
 
@@ -141,7 +141,7 @@ class AsanaClient {
             if (core.isDebug()) {
                 core.debug(`editTask: task #${github_issue} not found, creating a new one`);
             }
-            createTask(github_issue);
+            this.createTask(github_issue);
             task_gid = this.findTask(github_issue.number);
         }
 

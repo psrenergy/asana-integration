@@ -11,7 +11,11 @@ const users = {
     'pedroripper': '1204414685536664'
 };
 
-function get_user(assignee) {
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function getUser(assignee) {
     if (assignee != null && assignee.hasOwnProperty('login')) {
         const login = assignee.login.toLowerCase();
         if (users.hasOwnProperty(login)) {
@@ -23,94 +27,97 @@ function get_user(assignee) {
     return null;
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number) {
-    let query = {
-        'projects.all': asana_project_id,
-        'opt_pretty': true
-    };
-    query['custom_fields.' + asana_custom_field + '.value'] = issue_number;
-
-    let result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
-    if (result.data.length == 0) {
-        await sleep(10000);
-        result = await asana_client.tasks.searchTasksForWorkspace(asana_workspace_id, query);
-
-        if (result.data.length == 0) {
-            core.setFailed("Task not found");
-        }
-    } else if (result.data.length > 1) {
-        core.setFailed("More than one task found");
+class AsanaClient {
+    constructor(secret, workspace_id, project_id, custom_field) {
+        this.client = asana.Client.create().useAccessToken(secret);
+        this.workspace_id = workspace_id;
+        this.project_id = project_id;
+        this.custom_field = custom_field;
     }
-    return result.data[0].gid;
-}
 
-async function open(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
-    const issue_number = github.context.payload.issue.number.toString();
-    const issue_url = github.context.payload.issue.html_url;
-    const issue_title = github.context.payload.issue.title;
-    const issue_assignee = github.context.payload.issue.assignee;
+    async findTask(issue_number) {
+        let query = {
+            'projects.all': this.project_id,
+            'opt_pretty': true
+        };
+        query['custom_fields.' + this.custom_field + '.value'] = issue_number;
 
-    const task_assignee = await get_user(issue_assignee);
-    let task_custom_fields = {};
-    task_custom_fields[asana_custom_field] = issue_number;
+        let result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, query);
+        if (result.data.length == 0) {
+            // sometimes the task is not found, so we wait 10 seconds and try again
+            await sleep(10000);
+            result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, query);
 
-    await asana_client.tasks.createTask({
-        'workspace': asana_workspace_id,
-        'projects': [asana_project_id],
-        'name': issue_title,
-        'notes': issue_url,
-        'assignee': task_assignee,
-        'custom_fields': task_custom_fields,
-        'pretty': true
-    });
-}
+            if (result.data.length == 0) {
+                core.setFailed("Task not found");
+            }
+        } else if (result.data.length > 1) {
+            core.setFailed("More than one task found");
+        }
+        return result.data[0].gid;
+    }
 
-async function close(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
-    const issue_number = github.context.payload.issue.number.toString();
+    async createTask(issue_number, issue_url, issue_title, issue_assignee) {
+        const task_assignee = await getUser(issue_assignee);
+        let task_custom_fields = {};
+        task_custom_fields[this.custom_field] = issue_number;
 
-    const task_gid = await get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
-
-    await asana_client.tasks.updateTask(task_gid, {
-        'completed': true,
-        'pretty': true
-    });
-}
-
-async function edit(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
-    const issue_number = github.context.payload.issue.number.toString();
-    const issue_title = github.context.payload.issue.title;
-    const issue_assignee = github.context.payload.issue.assignee;
-    const issue_state = github.context.payload.issue.state;
-
-    const task_gid = await get_task_gid(asana_client, asana_workspace_id, asana_project_id, asana_custom_field, issue_number);
-    const task_assignee = await get_user(issue_assignee);
-    const task_completed = issue_state != null && issue_state == 'closed';
-
-    await asana_client.tasks.updateTask(task_gid, {
-        'name': issue_title,
-        'assignee': task_assignee,
-        'completed': task_completed,
-        'pretty': true
-    });
-}
-
-async function migrate(asana_client, asana_workspace_id, asana_project_id, asana_custom_field) {
-    console.log(github);
-
-    console.log(process.env.GITHUB_TOKEN);
-
-    const octokit = github.getOctokit();
-
-
-    octokit.paginate(octokit.rest.issues.listForRepo, {})
-        .then(issues => {
-            console.log(issues);
+        await this.client.tasks.createTask({
+            'workspace': this.workspace_id,
+            'projects': [this.project_id],
+            'name': issue_title,
+            'notes': issue_url,
+            'assignee': task_assignee,
+            'custom_fields': task_custom_fields,
+            'pretty': true
         });
+    }
+
+    async close_task(issue_number) {
+        const task_gid = await this.find_task_gid(issue_number);
+
+        await this.client.tasks.updateTask(task_gid, {
+            'completed': true,
+            'pretty': true
+        });
+    }
+
+    async edit_task(issue_number, issue_title, issue_assignee, issue_state) {
+        const task_gid = this.findTask(issue_number);
+        const task_assignee = await getUser(issue_assignee);
+        const task_completed = issue_state != null && issue_state == 'closed';
+
+        await this.client.tasks.updateTask(task_gid, {
+            'name': issue_title,
+            'assignee': task_assignee,
+            'completed': task_completed,
+            'pretty': true
+        });
+    }
 }
+
+class GitHubIssue {
+    constructor(payload) {
+        this.number = payload.issue.number.toString();
+        this.url = payload.issue.html_url;
+        this.title = payload.issue.title;
+        this.assignee = payload.issue.assignee;
+        this.state = payload.issue.state;
+    }
+}
+
+// async function migrate(asana_client) {
+//     console.log(github);
+
+//     // console.log(process.env.GITHUB_TOKEN);
+
+//     // const octokit = github.getOctokit();
+
+//     // octokit.paginate(octokit.rest.issues.listForRepo, {})
+//     //     .then(issues => {
+//     //         console.log(issues);
+//     //     });
+// }
 
 async function run() {
     try {
@@ -120,16 +127,19 @@ async function run() {
         const asana_workspace_id = core.getInput('asana-workspace-id');
         const asana_project_id = core.getInput('asana-project-id');
         const asana_custom_field = '1204412546956914';
-        const asana_client = asana.Client.create().useAccessToken(asana_secret);
+
+        const asana_client = AsanaClient(asana_secret, asana_workspace_id, asana_project_id, asana_custom_field);
+
+        const github_issue = GitHubIssue(github.context.payload);
 
         if (action == 'open') {
-            await open(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
+            await asana_client.create_task(github_issue.number, github_issue.url, github_issue.title, github_issue.assignee);
         } else if (action == 'close') {
-            await close(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
+            await asana_client.close_task(github_issue.number);
         } else if (action == 'edit') {
-            await edit(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
-        } else if (action == 'migrate') {
-            await migrate(asana_client, asana_workspace_id, asana_project_id, asana_custom_field);
+            await asana_client.edit_task(github_issue.number, github_issue.title, github_issue.assignee, github_issue.state);
+        // } else if (action == 'migrate') {
+        //     await migrate(asana_client);
         } else {
             core.setFailed("Invalid action");
         }

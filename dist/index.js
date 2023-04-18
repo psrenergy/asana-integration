@@ -74583,16 +74583,16 @@ class AsanaClient {
         query['custom_fields.' + this.custom_field + '.value'] = issue_number;
 
         let result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, query);
+        log.console(result);
+
         if (result.data.length == 0) {
             if (core.isDebug()) {
-                core.debug(`findTask: task #${issue_number} not found, waiting 10 seconds`);
+                core.debug(`findTask: task #${issue_number} not found, waiting 10 seconds and searching again`);
             }
             await sleep(10000);
 
-            if (core.isDebug()) {
-                core.debug(`findTask: task #${issue_number} not found, searching again`);
-            }
             result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, query);
+            log.console(result);
 
             if (result.data.length == 0) {
                 if (core.isDebug()) {
@@ -74615,7 +74615,7 @@ class AsanaClient {
         const task_gid = await this.findTask(github_issue.number);
         if (task_gid == 0) {
             if (core.isDebug()) {
-                core.debug(`createTask: task #${github_issue} not found, creating a new one`);
+                core.debug(`createTask: task #${github_issue.number} not found, creating a new one`);
             }
 
             const task_assignee = await getUser(github_issue.assignee);
@@ -74623,7 +74623,7 @@ class AsanaClient {
             task_custom_fields[this.custom_field] = github_issue.number;
 
             if (core.isDebug()) {
-                core.debug(`createTask: task #${github_issue}, title: ${github_issue.title}, url: ${github_issue.url}, assignee: ${task_assignee}`);
+                core.debug(`createTask: task #${github_issue.number}, title: ${github_issue.title}, url: ${github_issue.url}, assignee: ${task_assignee}`);
             }
     
             await this.client.tasks.createTask({
@@ -74667,7 +74667,7 @@ class AsanaClient {
         let task_gid = await this.findTask(github_issue.number);
         if (task_gid == 0) {
             if (core.isDebug()) {
-                core.debug(`editTask: task #${github_issue} not found, creating a new one`);
+                core.debug(`editTask: task #${github_issue.number} not found, creating a new one`);
             }
             await this.createTask(github_issue);
             task_gid = await this.findTask(github_issue.number);

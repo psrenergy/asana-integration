@@ -105,6 +105,7 @@ class AsanaClient {
                 core.debug(`closeTask: task #${github_issue} not found, creating a new one`);
             }
             createTask(github_issue);
+            task_gid = this.findTask(github_issue.number);
         }
 
         if (core.isDebug()) {
@@ -118,12 +119,13 @@ class AsanaClient {
     }
 
     async editTask(github_issue) {
-        const task_gid = this.findTask(github_issue.number);
+        let task_gid = this.findTask(github_issue.number);
         if (task_gid == 0) {
             if (core.isDebug()) {
                 core.debug(`editTask: task #${github_issue} not found, creating a new one`);
             }
             createTask(github_issue);
+            task_gid = this.findTask(github_issue.number);
         }
 
         const task_assignee = await getUser(github_issue.assignee);

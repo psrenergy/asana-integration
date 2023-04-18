@@ -54,16 +54,31 @@ class AsanaClient {
 
         let result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, query);
         if (result.data.length == 0) {
+            if (core.isDebug()) {
+                core.debug(`findTask: task #${issue_number} not found, waiting 10 seconds`);
+            }
             await sleep(10000);
+
+            if (core.isDebug()) {
+                core.debug(`findTask: task #${issue_number} not found, searching again`);
+            }
             result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, query);
 
             if (result.data.length == 0) {
+                if (core.isDebug()) {
+                    core.debug(`findTask: task #${issue_number} not found`);
+                }
                 return 0;
             }
         } else if (result.data.length > 1) {
-            core.setFailed("More than one task found");
+            core.setFailed(`More than one task found for issue #${issue_number}`);
         }
-        return result.data[0].gid;
+
+        const gid = result.data[0].gid;
+        if (core.isDebug()) {
+            core.debug(`findTask: task #${issue_number} found, gid: ${gid}`);
+        }
+        return gid;
     }
 
     async createTask(github_issue) {

@@ -74597,25 +74597,48 @@ class AsanaClient {
     }
 
     async createTask(github_issue) {
-        const task_assignee = await getUser(github_issue.assignee);
-        let task_custom_fields = {};
-        task_custom_fields[this.custom_field] = github_issue.number;
+        const task_gid = await this.findTask(github_issue.number);
+        if (task_gid == 0) {
+            if (core.isDebug()) {
+                core.debug(`createTask: task #${github_issue} not found, creating a new one`);
+            }
 
-        await this.client.tasks.createTask({
-            'workspace': this.workspace_id,
-            'projects': [this.project_id],
-            'name': github_issue.title,
-            'notes': github_issue.url,
-            'assignee': task_assignee,
-            'custom_fields': task_custom_fields,
-            'pretty': true
-        });
+            const task_assignee = await getUser(github_issue.assignee);
+            let task_custom_fields = {};
+            task_custom_fields[this.custom_field] = github_issue.number;
+
+            if (core.isDebug()) {
+                core.debug(`createTask: task #${github_issue}, title: ${github_issue.title}, url: ${github_issue.url}, assignee: ${task_assignee}`);
+            }
+    
+            await this.client.tasks.createTask({
+                'workspace': this.workspace_id,
+                'projects': [this.project_id],
+                'name': github_issue.title,
+                'notes': github_issue.url,
+                'assignee': task_assignee,
+                'custom_fields': task_custom_fields,
+                'pretty': true
+            });
+        } else {
+            if (core.isDebug()) {
+                core.debug(`createTask: task #${github_issue} already exists, updating it`);
+            }
+            editTask(github_issue);
+        }
     }
 
     async closeTask(github_issue) {
         const task_gid = await this.findTask(github_issue.number);
         if (task_gid == 0) {
+            if (core.isDebug()) {
+                core.debug(`closeTask: task #${github_issue} not found, creating a new one`);
+            }
             createTask(github_issue);
+        }
+
+        if (core.isDebug()) {
+            core.debug(`closeTask: task #${github_issue}, title: ${github_issue.title}`);
         }
 
         await this.client.tasks.updateTask(task_gid, {
@@ -74627,11 +74650,18 @@ class AsanaClient {
     async editTask(github_issue) {
         const task_gid = this.findTask(github_issue.number);
         if (task_gid == 0) {
+            if (core.isDebug()) {
+                core.debug(`editTask: task #${github_issue} not found, creating a new one`);
+            }
             createTask(github_issue);
         }
 
         const task_assignee = await getUser(github_issue.assignee);
         const task_completed = github_issue.state != null && github_issue.state == 'closed';
+
+        if (core.isDebug()) {
+            core.debug(`editTask: task #${github_issue}, title: ${github_issue.title}, assignee: ${task_assignee}, completed: ${task_completed}`);
+        }
 
         await this.client.tasks.updateTask(task_gid, {
             'name': github_issue.title,

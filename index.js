@@ -53,7 +53,7 @@ class AsanaClient {
         query['custom_fields.' + this.custom_field + '.value'] = issue_number;
 
         let result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, query);
-        log.console(result);
+        console.log(result);
 
         if (result.data.length == 0) {
             if (core.isDebug()) {
@@ -62,7 +62,7 @@ class AsanaClient {
             await sleep(10000);
 
             result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, query);
-            log.console(result);
+            console.log(result);
 
             if (result.data.length == 0) {
                 if (core.isDebug()) {

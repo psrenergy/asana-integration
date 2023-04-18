@@ -147,7 +147,7 @@ class AsanaClient {
         const task_completed = github_issue.state != null && github_issue.state == 'closed';
 
         if (core.isDebug()) {
-            core.debug(`editTask: task #${github_issue}, title: ${github_issue.title}, assignee: ${task_assignee}, completed: ${task_completed}`);
+            core.debug(`editTask: task ${task_gid}, issue #${github_issue.number}, title: ${github_issue.title}, assignee: ${task_assignee}, completed: ${task_completed}`);
         }
 
         await this.client.tasks.updateTask(task_gid, {

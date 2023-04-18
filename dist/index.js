@@ -74538,7 +74538,8 @@ const users = {
     'storino': '1204285451098195',
     'viniciusjusten': '1204414013512209',
     'guilhermebodin': '1204391944334606',
-    'pedroripper': '1204414685536664'
+    'pedroripper': '1204414685536664',
+    'rodrigodelpreti': '1204218382803581'
 };
 
 function sleep(ms) {

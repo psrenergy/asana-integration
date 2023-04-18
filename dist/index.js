@@ -74583,17 +74583,14 @@ class AsanaClient {
         query['custom_fields.' + this.custom_field + '.value'] = issue_number;
 
         let result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, query);
-        console.log(result);
 
         if (result.data.length == 0) {
             if (core.isDebug()) {
                 core.debug(`findTask: task #${issue_number} not found, waiting 10 seconds and searching again`);
             }
+
             await sleep(10000);
-
             result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, query);
-            console.log(result);
-
             if (result.data.length == 0) {
                 if (core.isDebug()) {
                     core.debug(`findTask: task #${issue_number} not found`);

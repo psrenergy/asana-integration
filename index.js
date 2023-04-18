@@ -74,6 +74,8 @@ class AsanaClient {
             core.setFailed(`More than one task found for issue #${issue_number}`);
         }
 
+        console.log(result);
+
         const gid = result.data[0].gid;
         if (core.isDebug()) {
             core.debug(`findTask: task #${issue_number} found, gid: ${gid}`);

@@ -74580,19 +74580,23 @@ class AsanaClient {
     }
 
     async findTask(issue_number) {
-        let query = {
+        let data = {
             'projects.all': this.project_id,
             'opt_pretty': true
         };
-        query['custom_fields.' + this.custom_field + '.value'] = issue_number;
+        data['custom_fields.' + this.custom_field + '.value'] = issue_number;
 
-        let result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, query);
+        core.debug(`findTask: searchTasksForWorkspace: ${data}`);
+        let result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, data);
 
         if (result.data.length == 0) {
             core.debug(`findTask: task #${issue_number} not found, waiting 10 seconds and searching again`);
 
             await sleep(10000);
-            result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, query);
+
+            core.debug(`findTask: searchTasksForWorkspace: ${data}`);
+            result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, data);
+            
             if (result.data.length == 0) {
                 core.debug(`findTask: task #${issue_number} not found`);
                 return 0;
@@ -74617,7 +74621,7 @@ class AsanaClient {
 
             core.debug(`createTask: task #${github_issue.number}, title: ${github_issue.title}, url: ${github_issue.url}, assignee: ${task_assignee}`);
 
-            await this.client.tasks.createTask({
+            const data = {
                 'workspace': this.workspace_id,
                 'projects': [this.project_id],
                 'name': github_issue.title,
@@ -74625,7 +74629,10 @@ class AsanaClient {
                 'assignee': task_assignee,
                 'custom_fields': task_custom_fields,
                 'pretty': true
-            });
+            };
+
+            core.debug(`createTask: createTask: ${data}`);
+            await this.client.tasks.createTask(data);
         } else {
             core.debug(`createTask: task #${github_issue} already exists, updating it`);
             await this.editTask(github_issue);
@@ -74642,10 +74649,13 @@ class AsanaClient {
 
         core.debug(`closeTask: task #${github_issue}, title: ${github_issue.title}`);
 
-        await this.client.tasks.updateTask(task_gid, {
+        const data = {
             'completed': true,
             'pretty': true
-        });
+        };
+
+        core.debug(`closeTask: updateTask: ${data}`);
+        await this.client.tasks.updateTask(task_gid, data);
     }
 
     async editTask(github_issue) {
@@ -74661,12 +74671,15 @@ class AsanaClient {
 
         core.debug(`editTask: task ${task_gid}, issue #${github_issue.number}, title: ${github_issue.title}, assignee: ${task_assignee}, completed: ${task_completed}`);
 
-        await this.client.tasks.updateTask(task_gid, {
+        const data = {
             'name': github_issue.title,
             'assignee': task_assignee,
             'completed': task_completed,
             'pretty': true
-        });
+        };
+
+        core.debug(`editTask: updateTask: ${data}`);
+        await this.client.tasks.updateTask(task_gid, data);
     }
 }
 

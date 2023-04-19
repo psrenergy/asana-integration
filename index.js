@@ -102,7 +102,8 @@ class AsanaClient {
             };
 
             core.debug(`createTask: createTask: ${JSON.stringify(data)}`);
-            await this.client.tasks.createTask(data);
+            const result = await this.client.tasks.createTask(data);
+            core.debug(`createTask: ${result}`);
         } else {
             core.debug(`createTask: task #${github_issue} already exists, updating it`);
             await this.editTask(github_issue);

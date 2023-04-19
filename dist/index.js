@@ -74586,7 +74586,7 @@ class AsanaClient {
         };
         data['custom_fields.' + this.custom_field + '.value'] = issue_number;
 
-        core.debug(`findTask: searchTasksForWorkspace: ${data}`);
+        core.debug(`findTask: searchTasksForWorkspace: ${JSON.stringify(data)}`);
         let result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, data);
 
         if (result.data.length == 0) {
@@ -74594,7 +74594,7 @@ class AsanaClient {
 
             await sleep(10000);
 
-            core.debug(`findTask: searchTasksForWorkspace: ${data}`);
+            core.debug(`findTask: searchTasksForWorkspace: ${JSON.stringify(data)}`);
             result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, data);
             
             if (result.data.length == 0) {
@@ -74631,7 +74631,7 @@ class AsanaClient {
                 'pretty': true
             };
 
-            core.debug(`createTask: createTask: ${data}`);
+            core.debug(`createTask: createTask: ${JSON.stringify(data)}`);
             await this.client.tasks.createTask(data);
         } else {
             core.debug(`createTask: task #${github_issue} already exists, updating it`);
@@ -74654,7 +74654,7 @@ class AsanaClient {
             'pretty': true
         };
 
-        core.debug(`closeTask: updateTask: ${data}`);
+        core.debug(`closeTask: updateTask: ${JSON.stringify(data)}`);
         await this.client.tasks.updateTask(task_gid, data);
     }
 
@@ -74678,7 +74678,7 @@ class AsanaClient {
             'pretty': true
         };
 
-        core.debug(`editTask: updateTask: ${data}`);
+        core.debug(`editTask: updateTask: ${JSON.stringify(data)}`);
         await this.client.tasks.updateTask(task_gid, data);
     }
 }

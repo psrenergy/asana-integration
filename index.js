@@ -3,13 +3,16 @@ const github = require('@actions/github');
 const asana = require('asana');
 
 const users = {
-    'raphasampaio': '1204198676859382',
+    'guilhermebodin': '1204391944334606',
+    'gvidigal-psr': '1204433497236007',
     'iurysab': '1204225355671418',
+    'joaquimg': '1204149448752625',
+    'pedroripper': '1204414685536664',
+    'rafabench': '1204414416538056',
+    'raphasampaio': '1204198676859382',
+    'rodrigodelpreti': '1204218382803581',
     'storino': '1204285451098195',
     'viniciusjusten': '1204414013512209',
-    'guilhermebodin': '1204391944334606',
-    'pedroripper': '1204414685536664',
-    'rodrigodelpreti': '1204218382803581'
 };
 
 function sleep(ms) {

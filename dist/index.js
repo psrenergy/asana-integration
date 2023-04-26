@@ -74540,6 +74540,7 @@ const users = {
     'pedroripper': '1204414685536664',
     'rafabench': '1204414416538056',
     'raphasampaio': '1204198676859382',
+    'ricardo-psr': '1204278175940416',
     'rodrigodelpreti': '1204218382803581',
     'storino': '1204285451098195',
     'viniciusjusten': '1204414013512209',

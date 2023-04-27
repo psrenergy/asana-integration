@@ -74564,8 +74564,6 @@ function getUser(assignee) {
 
 class GitHubIssue {
     constructor(payload) {
-        core.debug(`GitHubIssue: ${JSON.stringify(payload)}`);
-
         this.number = payload.issue.number.toString();
         this.url = payload.issue.html_url;
         this.title = payload.issue.title;
@@ -74752,6 +74750,8 @@ class AsanaClient {
             'custom_fields': task_custom_fields,
             'pretty': true
         };
+
+        console.log(data);
 
         core.debug(`addTaskParticipant: updateTask: ${JSON.stringify(data)}`);
         await this.client.tasks.updateTask(task_gid, data);

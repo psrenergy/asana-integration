@@ -74623,6 +74623,13 @@ class AsanaClient {
         return gid;
     }
 
+    async getTask(task_gid) {
+        let task = await this.client.tasks.getTask(task_gid, {
+            opt_pretty: true
+        });
+        return task;
+    }
+
     async createTask(github_issue) {
         const task_gid = await this.findTask(github_issue.number);
         if (task_gid == 0) {
@@ -74681,12 +74688,31 @@ class AsanaClient {
             task_gid = await this.findTask(github_issue.number);
         }
 
-        this.client.tasks.getTask(task_gid, {
-                opt_pretty: true
-            })
-            .then((result) => {
-                console.log(result);
-            });
+        let task = await getTask(task_gid);
+        if (task.hasOwnProperty("custom_fields")) {
+            for (let custom_field of task.custom_fields) {
+                if (custom_field.gid == this.participants_column_id) {
+                    console.log(custom_field);
+                    console.log(custom_field.people_value);
+                    // if (custom_field.value != github_issue.assignee) {
+                    //     core.debug(`editTask: task #${github_issue.number} assignee changed, updating it`);
+                    //     await this.closeTask(github_issue);
+                    //     await this.createTask(github_issue);
+                    //     task_gid = await this.findTask(github_issue.number);
+                    // }
+                }
+            }
+
+            // if (task.custom_fields.hasOwnProperty(this.github_column_id)) {
+            //     if (task.custom_fields[this.github_column_id] == github_issue.number) {
+            //         core.debug(`editTask: task #${github_issue.number} already exists, updating it`);
+            //     } else {
+            //         core.debug(`editTask: task #${github_issue.number} already exists, but with a different issue number, creating a new one`);
+            //         await this.createTask(github_issue);
+            //         task_gid = await this.findTask(github_issue.number);
+            //     }
+            // }
+        }
 
         const task_assignee = await getUser(github_issue.assignee);
         const task_completed = github_issue.state != null && github_issue.state == 'closed';

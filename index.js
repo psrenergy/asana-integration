@@ -44,10 +44,8 @@ class GitHubIssue {
 
 class GitHubIssueComment {
     constructor(payload) {
-        core.debug(`GitHubIssueComment: ${JSON.stringify(payload)}`);
-
         this.number = payload.issue.number.toString();
-        this.login = payload.comment.login;
+        this.user = payload.comment.user.login;
     }
 }
 
@@ -205,28 +203,24 @@ class AsanaClient {
         const github_issue_comment = new GitHubIssueComment(github_payload);
 
         const task_gid = await this.findTask(github_issue_comment.number);
-
-        console.log(github_issue_comment.login);
-        const task_assignee = await getUser(github_issue_comment.login);
-        console.log(task_assignee);
+        const task_assignee = await getUser(github_issue_comment.user);
 
         let task_participants = await this.getTaskParticipants(task_gid);
-        if (task_assignee != null) {
-            task_participants.push(task_assignee);
+        if (task_assignee == null) {
+            core.setFailed(`addTaskParticipant: task ${task_gid}, issue #${github_issue_comment.number}, participant: ${github_issue_comment.user} not found`);
+            return;
         }
 
         let task_custom_fields = {};
         task_custom_fields[this.github_column_id] = github_issue_comment.number;
         task_custom_fields[this.participants_column_id] = task_participants;
 
-        core.debug(`addTaskParticipant: task ${task_gid}, issue #${github_issue_comment.number}, participant: ${github_issue_comment.login}`);
+        core.debug(`addTaskParticipant: task ${task_gid}, issue #${github_issue_comment.number}, participant: ${github_issue_comment.user}`);
 
         const data = {
             'custom_fields': task_custom_fields,
             'pretty': true
         };
-
-        console.log(data);
 
         core.debug(`addTaskParticipant: updateTask: ${JSON.stringify(data)}`);
         await this.client.tasks.updateTask(task_gid, data);

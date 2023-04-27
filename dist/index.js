@@ -74576,10 +74576,10 @@ class GitHubIssue {
 
 class GitHubIssueComment {
     constructor(payload) {
-        core.debug(`GitHubIssue: ${JSON.stringify(payload)}`);
+        core.debug(`GitHubIssueComment: ${JSON.stringify(payload)}`);
 
         this.number = payload.issue.number.toString();
-        this.user = payload.comment.login;
+        this.login = payload.comment.login;
     }
 }
 
@@ -74645,7 +74645,9 @@ class AsanaClient {
         return participants;
     }
 
-    async createTask(github_issue) {
+    async createTask(github_payload) {
+        const github_issue = new GitHubIssue(github_payload);
+
         const task_gid = await this.findTask(github_issue.number);
         if (task_gid == 0) {
             core.debug(`createTask: task #${github_issue.number} not found, creating a new one`);
@@ -74676,7 +74678,9 @@ class AsanaClient {
         }
     }
 
-    async closeTask(github_issue) {
+    async closeTask(github_payload) {
+        const github_issue = new GitHubIssue(github_payload);
+
         const task_gid = await this.findTask(github_issue.number);
         if (task_gid == 0) {
             core.debug(`closeTask: task #${github_issue} not found, creating a new one`);
@@ -74695,7 +74699,9 @@ class AsanaClient {
         await this.client.tasks.updateTask(task_gid, data);
     }
 
-    async editTask(github_issue) {
+    async editTask(github_payload) {
+        const github_issue = new GitHubIssue(github_payload);
+
         let task_gid = await this.findTask(github_issue.number);
         if (task_gid == 0) {
             core.debug(`editTask: task #${github_issue.number} not found, creating a new one`);
@@ -74728,6 +74734,30 @@ class AsanaClient {
     }
 }
 
+async function addTaskParticipant(github_payload) {
+    const github_issue_comment = new GitHubIssueComment(github_payload);
+
+    const task_gid = await this.findTask(github_issue_comment.number);
+
+    const task_assignee = await this.getUser(github_issue_comment.login);
+    let task_participants = await this.getTaskParticipants(task_gid);
+    task_participants.push(task_assignee);
+
+    let task_custom_fields = {};
+    task_custom_fields[this.github_column_id] = github_issue_comment.number;
+    task_custom_fields[this.participants_column_id] = task_participants;
+
+    core.debug(`addTaskParticipant: task ${task_gid}, issue #${github_issue_comment.number}, assignee: ${task_assignee}`);
+
+    const data = {
+        'custom_fields': task_custom_fields,
+        'pretty': true
+    };
+
+    core.debug(`addTaskParticipant: updateTask: ${JSON.stringify(data)}`);
+    await client.tasks.updateTask(task_gid, data);
+}
+
 // async function migrate(asana_client) {
 //     console.log(github);
 
@@ -74744,6 +74774,7 @@ class AsanaClient {
 async function run() {
     try {
         const action = core.getInput('action');
+        core.debug(`action: ${action}`);
 
         const asana_secret = core.getInput('asana-secret');
         const asana_workspace_id = core.getInput('asana-workspace-id');
@@ -74753,14 +74784,14 @@ async function run() {
 
         const asana_client = new AsanaClient(asana_secret, asana_workspace_id, asana_project_id, asana_github_column_id, asana_participants_column_id);
 
-        const github_issue = new GitHubIssue(github.context.payload);
-
         if (action == 'open') {
-            await asana_client.createTask(github_issue);
+            await asana_client.createTask(github.context.payload);
         } else if (action == 'close') {
-            await asana_client.closeTask(github_issue);
+            await asana_client.closeTask(github.context.payload);
         } else if (action == 'edit') {
-            await asana_client.editTask(github_issue);
+            await asana_client.editTask(github.context.payload);
+        } else if (action == 'add-participant') {
+            await asana_client.addTaskParticipant(github.context.payload);
         } else {
             core.setFailed("Invalid action");
         }

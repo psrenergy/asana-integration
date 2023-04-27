@@ -140,7 +140,7 @@ class AsanaClient {
             core.debug(`createTask: ${result}`);
         } else {
             core.debug(`createTask: task #${github_issue} already exists, updating it`);
-            await this.editTask(github_issue);
+            await this.editTask(github_payload);
         }
     }
 
@@ -150,7 +150,7 @@ class AsanaClient {
         const task_gid = await this.findTask(github_issue.number);
         if (task_gid == 0) {
             core.debug(`closeTask: task #${github_issue} not found, creating a new one`);
-            await this.createTask(github_issue);
+            await this.createTask(github_payload);
             task_gid = await this.findTask(github_issue.number);
         }
 
@@ -171,7 +171,7 @@ class AsanaClient {
         let task_gid = await this.findTask(github_issue.number);
         if (task_gid == 0) {
             core.debug(`editTask: task #${github_issue.number} not found, creating a new one`);
-            await this.createTask(github_issue);
+            await this.createTask(github_payload);
             task_gid = await this.findTask(github_issue.number);
         }
 

@@ -34,6 +34,8 @@ function getUser(assignee) {
 
 class GitHubIssue {
     constructor(payload) {
+        core.debug(`GitHubIssue: ${JSON.stringify(payload)}`);
+
         this.number = payload.issue.number.toString();
         this.url = payload.issue.html_url;
         this.title = payload.issue.title;

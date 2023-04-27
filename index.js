@@ -158,7 +158,7 @@ class AsanaClient {
             task_gid = await this.findTask(github_issue.number);
         }
 
-        let task = await getTask(task_gid);
+        let task = await this.getTask(task_gid);
         if (task.hasOwnProperty("custom_fields")) {
             for (let custom_field of task.custom_fields) {
                 if (custom_field.gid == this.participants_column_id) {

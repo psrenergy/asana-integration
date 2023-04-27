@@ -224,7 +224,7 @@ class AsanaClient {
         };
 
         core.debug(`addTaskParticipant: updateTask: ${JSON.stringify(data)}`);
-        await client.tasks.updateTask(task_gid, data);
+        await this.client.tasks.updateTask(task_gid, data);
     }
 }
 

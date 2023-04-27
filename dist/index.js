@@ -74574,12 +74574,22 @@ class GitHubIssue {
     }
 }
 
+class GitHubIssueComment {
+    constructor(payload) {
+        core.debug(`GitHubIssue: ${JSON.stringify(payload)}`);
+
+        this.number = payload.issue.number.toString();
+        this.user = payload.comment.login;
+    }
+}
+
 class AsanaClient {
-    constructor(secret, workspace_id, project_id, custom_field) {
+    constructor(secret, workspace_id, project_id, github_column_id, participants_column_id) {
         this.client = asana.Client.create().useAccessToken(secret);
         this.workspace_id = workspace_id;
         this.project_id = project_id;
-        this.custom_field = custom_field;
+        this.github_column_id = github_column_id;
+        this.participants_column_id = participants_column_id;
     }
 
     async findTask(issue_number) {
@@ -74587,7 +74597,7 @@ class AsanaClient {
             'projects.all': this.project_id,
             'opt_pretty': true
         };
-        data['custom_fields.' + this.custom_field + '.value'] = issue_number;
+        data['custom_fields.' + this.github_column_id + '.value'] = issue_number;
 
         core.debug(`findTask: searchTasksForWorkspace: ${JSON.stringify(data)}`);
         let result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, data);
@@ -74620,7 +74630,8 @@ class AsanaClient {
 
             const task_assignee = await getUser(github_issue.assignee);
             let task_custom_fields = {};
-            task_custom_fields[this.custom_field] = github_issue.number;
+            task_custom_fields[this.github_column_id] = github_issue.number;
+            task_custom_fields[this.participants_column_id] = task_assignee;
 
             core.debug(`createTask: task #${github_issue.number}, title: ${github_issue.title}, url: ${github_issue.url}, assignee: ${task_assignee}`);
 
@@ -74707,9 +74718,10 @@ async function run() {
         const asana_secret = core.getInput('asana-secret');
         const asana_workspace_id = core.getInput('asana-workspace-id');
         const asana_project_id = core.getInput('asana-project-id');
-        const asana_custom_field = '1204412546956914';
+        const asana_github_column_id = '1204412546956914';
+        const asana_participants_column_id = '1204488256461384';
 
-        const asana_client = new AsanaClient(asana_secret, asana_workspace_id, asana_project_id, asana_custom_field);
+        const asana_client = new AsanaClient(asana_secret, asana_workspace_id, asana_project_id, asana_github_column_id, asana_participants_column_id);
 
         const github_issue = new GitHubIssue(github.context.payload);
 

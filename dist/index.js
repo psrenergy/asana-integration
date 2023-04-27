@@ -74709,7 +74709,12 @@ class AsanaClient {
         const task_completed = github_issue.state != null && github_issue.state == 'closed';
 
         let task_participants = await this.getTaskParticipants(task_gid);
-        task_participants.push(task_assignee);
+        if (task_assignee == null) {
+            core.setFailed(`editTask: assignee for task #${github_issue.number} not found`);
+            return;
+        } else {
+            task_participants.push(task_assignee);
+        }
 
         let task_custom_fields = {};
         task_custom_fields[this.github_column_id] = github_issue.number;
@@ -74737,7 +74742,7 @@ class AsanaClient {
 
         let task_participants = await this.getTaskParticipants(task_gid);
         if (task_assignee == null) {
-            core.setFailed(`addTaskParticipant: task ${task_gid}, issue #${github_issue_comment.number}, participant: ${task_assignee} not found`);
+            core.setFailed(`addTaskParticipant: assignee for task #${github_issue_comment.number} not found`);
             return;
         } else {
             task_participants.push(task_assignee);
@@ -74797,7 +74802,7 @@ async function run() {
             core.setFailed("Invalid action");
         }
     } catch (error) {
-        core.setFailed(error.message);
+        core.setFailed(error.message, ": ", error.stack);
     }
 }
 

@@ -79,7 +79,7 @@ class AsanaClient {
 
             core.debug(`findTask: searchTasksForWorkspace: ${JSON.stringify(data)}`);
             result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, data);
-            
+
             if (result.data.length == 0) {
                 core.debug(`findTask: task #${issue_number} not found`);
                 return 0;
@@ -150,6 +150,13 @@ class AsanaClient {
             await this.createTask(github_issue);
             task_gid = await this.findTask(github_issue.number);
         }
+
+        this.client.tasks.getTask(task_gid, {
+                opt_pretty: true
+            })
+            .then((result) => {
+                console.log(result);
+            });
 
         const task_assignee = await getUser(github_issue.assignee);
         const task_completed = github_issue.state != null && github_issue.state == 'closed';

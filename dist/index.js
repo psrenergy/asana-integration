@@ -74802,7 +74802,7 @@ async function run() {
             core.setFailed("Invalid action");
         }
     } catch (error) {
-        core.setFailed(error.message, ": ", error.stack);
+        core.setFailed(error.message + ": " + error.stack);
     }
 }
 

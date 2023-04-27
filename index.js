@@ -209,6 +209,7 @@ class AsanaClient {
         console.log(github_issue_comment.login);
         const task_assignee = await getUser(github_issue_comment.login);
         console.log(task_assignee);
+
         let task_participants = await this.getTaskParticipants(task_gid);
         if (task_assignee != null) {
             task_participants.push(task_assignee);

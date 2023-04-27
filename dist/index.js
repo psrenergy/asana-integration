@@ -74557,9 +74557,10 @@ function getUser(assignee) {
             return users[login];
         } else {
             core.setFailed(`User ${login} not found`);
+            exit(1);
         }
     }
-    return null;
+    return "";
 }
 
 class GitHubIssue {
@@ -74570,6 +74571,7 @@ class GitHubIssue {
         this.url = payload.issue.html_url;
         this.title = payload.issue.title;
         this.assignee = payload.issue.assignee;
+        this.user = payload.issue.user;
         this.state = payload.issue.state;
     }
 }
@@ -74652,12 +74654,14 @@ class AsanaClient {
         if (task_gid == 0) {
             core.debug(`createTask: task #${github_issue.number} not found, creating a new one`);
 
+            const task_creator = await getUser(github_issue.user);
             const task_assignee = await getUser(github_issue.assignee);
+
             let task_custom_fields = {};
             task_custom_fields[this.github_column_id] = github_issue.number;
-            task_custom_fields[this.participants_column_id] = task_assignee;
+            task_custom_fields[this.participants_column_id] = [task_assignee, task_creator];
 
-            core.debug(`createTask: task #${github_issue.number}, title: ${github_issue.title}, url: ${github_issue.url}, assignee: ${task_assignee}`);
+            core.debug(`createTask: task #${github_issue.number}, title: ${github_issue.title}, url: ${github_issue.url}, creator: ${task_creator}, assignee: ${task_assignee}`);
 
             const data = {
                 'workspace': this.workspace_id,
@@ -74713,12 +74717,7 @@ class AsanaClient {
         const task_completed = github_issue.state != null && github_issue.state == 'closed';
 
         let task_participants = await this.getTaskParticipants(task_gid);
-        if (task_assignee == null) {
-            core.setFailed(`editTask: assignee for task #${github_issue.number} not found`);
-            return;
-        } else {
-            task_participants.push(task_assignee);
-        }
+        task_participants.push(task_assignee);
 
         let task_custom_fields = {};
         task_custom_fields[this.github_column_id] = github_issue.number;
@@ -74745,12 +74744,7 @@ class AsanaClient {
         const task_assignee = await getUser(github_issue_comment.user);
 
         let task_participants = await this.getTaskParticipants(task_gid);
-        if (task_assignee == null) {
-            core.setFailed(`addTaskParticipant: assignee for task #${github_issue_comment.number} not found`);
-            return;
-        } else {
-            task_participants.push(task_assignee);
-        }
+        task_participants.push(task_assignee);
 
         let task_custom_fields = {};
         task_custom_fields[this.github_column_id] = github_issue_comment.number;

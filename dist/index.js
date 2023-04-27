@@ -74564,6 +74564,8 @@ function getUser(assignee) {
 
 class GitHubIssue {
     constructor(payload) {
+        core.debug(`GitHubIssue: ${JSON.stringify(payload)}`);
+
         this.number = payload.issue.number.toString();
         this.url = payload.issue.html_url;
         this.title = payload.issue.title;
@@ -74574,6 +74576,8 @@ class GitHubIssue {
 
 class GitHubIssueComment {
     constructor(payload) {
+        core.debug(`GitHubIssueComment: ${JSON.stringify(payload)}`);
+
         this.number = payload.issue.number.toString();
         this.user = payload.comment.user;
     }

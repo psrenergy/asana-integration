@@ -45,7 +45,7 @@ class GitHubIssue {
 class GitHubIssueComment {
     constructor(payload) {
         this.number = payload.issue.number.toString();
-        this.user = payload.comment.user.login;
+        this.user = payload.comment.user;
     }
 }
 

@@ -206,9 +206,13 @@ class AsanaClient {
 
         const task_gid = await this.findTask(github_issue_comment.number);
 
+        console.log(github_issue_comment.login);
         const task_assignee = await getUser(github_issue_comment.login);
+        console.log(task_assignee);
         let task_participants = await this.getTaskParticipants(task_gid);
-        task_participants.push(task_assignee);
+        if (task_assignee != null) {
+            task_participants.push(task_assignee);
+        }
 
         let task_custom_fields = {};
         task_custom_fields[this.github_column_id] = github_issue_comment.number;

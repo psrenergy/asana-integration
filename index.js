@@ -100,6 +100,21 @@ class AsanaClient {
         return task;
     }
 
+    async getTaskParticipants(task_gid) {
+        let participants = [];
+        const task = await this.getTask(task_gid);
+        if (task.hasOwnProperty("custom_fields")) {
+            for (let custom_field of task.custom_fields) {
+                if (custom_field.gid == this.participants_column_id) {
+                    for (let person of custom_field.people_value) {
+                        participants.push(person.gid);
+                    }
+                }
+            }   
+        }
+        return participants;
+    }
+
     async createTask(github_issue) {
         const task_gid = await this.findTask(github_issue.number);
         if (task_gid == 0) {
@@ -158,34 +173,15 @@ class AsanaClient {
             task_gid = await this.findTask(github_issue.number);
         }
 
-        let task = await this.getTask(task_gid);
-        if (task.hasOwnProperty("custom_fields")) {
-            for (let custom_field of task.custom_fields) {
-                if (custom_field.gid == this.participants_column_id) {
-                    console.log(custom_field);
-                    console.log(custom_field.people_value);
-                    // if (custom_field.value != github_issue.assignee) {
-                    //     core.debug(`editTask: task #${github_issue.number} assignee changed, updating it`);
-                    //     await this.closeTask(github_issue);
-                    //     await this.createTask(github_issue);
-                    //     task_gid = await this.findTask(github_issue.number);
-                    // }
-                }
-            }
-
-            // if (task.custom_fields.hasOwnProperty(this.github_column_id)) {
-            //     if (task.custom_fields[this.github_column_id] == github_issue.number) {
-            //         core.debug(`editTask: task #${github_issue.number} already exists, updating it`);
-            //     } else {
-            //         core.debug(`editTask: task #${github_issue.number} already exists, but with a different issue number, creating a new one`);
-            //         await this.createTask(github_issue);
-            //         task_gid = await this.findTask(github_issue.number);
-            //     }
-            // }
-        }
-
         const task_assignee = await getUser(github_issue.assignee);
         const task_completed = github_issue.state != null && github_issue.state == 'closed';
+
+        let task_participants = await this.getTaskParticipants(task_gid);
+        task_participants.push(task_assignee);
+
+        let task_custom_fields = {};
+        task_custom_fields[this.github_column_id] = github_issue.number;
+        task_custom_fields[this.participants_column_id] = task_participants;
 
         core.debug(`editTask: task ${task_gid}, issue #${github_issue.number}, title: ${github_issue.title}, assignee: ${task_assignee}, completed: ${task_completed}`);
 
@@ -193,6 +189,7 @@ class AsanaClient {
             'name': github_issue.title,
             'assignee': task_assignee,
             'completed': task_completed,
+            'custom_fields': task_custom_fields,
             'pretty': true
         };
 

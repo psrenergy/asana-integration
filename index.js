@@ -30,7 +30,7 @@ function getUser(assignee) {
             exit(1);
         }
     }
-    return "";
+    return null;
 }
 
 class GitHubIssue {
@@ -129,7 +129,11 @@ class AsanaClient {
 
             let task_custom_fields = {};
             task_custom_fields[this.github_column_id] = github_issue.number;
-            task_custom_fields[this.participants_column_id] = [task_assignee, task_creator];
+            if (task_assignee == null) {
+                task_custom_fields[this.participants_column_id] = [task_creator];
+            } else {
+                task_custom_fields[this.participants_column_id] = [task_assignee, task_creator];
+            }
 
             core.debug(`createTask: task #${github_issue.number}, title: ${github_issue.title}, url: ${github_issue.url}, creator: ${task_creator}, assignee: ${task_assignee}`);
 
@@ -187,7 +191,9 @@ class AsanaClient {
         const task_completed = github_issue.state != null && github_issue.state == 'closed';
 
         let task_participants = await this.getTaskParticipants(task_gid);
-        task_participants.push(task_assignee);
+        if (task_assignee != null) {
+            task_participants.push(task_assignee);
+        }
 
         let task_custom_fields = {};
         task_custom_fields[this.github_column_id] = github_issue.number;
@@ -211,16 +217,18 @@ class AsanaClient {
         const github_issue_comment = new GitHubIssueComment(github_payload);
 
         const task_gid = await this.findTask(github_issue_comment.number);
-        const task_assignee = await getUser(github_issue_comment.user);
+        const task_participant = await getUser(github_issue_comment.user);
 
         let task_participants = await this.getTaskParticipants(task_gid);
-        task_participants.push(task_assignee);
+        if (task_participant != null) {
+            task_participants.push(task_participant);
+        }
 
         let task_custom_fields = {};
         task_custom_fields[this.github_column_id] = github_issue_comment.number;
         task_custom_fields[this.participants_column_id] = task_participants;
 
-        core.debug(`addTaskParticipant: task ${task_gid}, issue #${github_issue_comment.number}, participant: ${task_assignee}`);
+        core.debug(`addTaskParticipant: task ${task_gid}, issue #${github_issue_comment.number}, participant: ${task_participant}`);
 
         const data = {
             'custom_fields': task_custom_fields,

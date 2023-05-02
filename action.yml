@@ -4,9 +4,9 @@ inputs:
     required: true
   asana-secret:
     required: true
-  asana-workspace-id:
+  asana-workspace:
     required: true
-  asana-project-id:
+  asana-project:
     required: true
 runs:
   using: 'node16'

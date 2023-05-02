@@ -74586,23 +74586,23 @@ class GitHubIssueComment {
 }
 
 class AsanaClient {
-    constructor(secret, workspace_id, project_id, github_column_id, participants_column_id) {
+    constructor(secret, workspace, project, github_column, participants_column) {
         this.client = asana.Client.create().useAccessToken(secret);
-        this.workspace_id = workspace_id;
-        this.project_id = project_id;
-        this.github_column_id = github_column_id;
-        this.participants_column_id = participants_column_id;
+        this.workspace = workspace;
+        this.project = project;
+        this.github_column = github_column;
+        this.participants_column = participants_column;
     }
 
     async findTask(issue_number) {
         let data = {
-            'projects.all': this.project_id,
+            'projects.all': this.project,
             'opt_pretty': true
         };
-        data['custom_fields.' + this.github_column_id + '.value'] = issue_number;
+        data['custom_fields.' + this.github_column + '.value'] = issue_number;
 
         core.debug(`findTask: searchTasksForWorkspace: ${JSON.stringify(data)}`);
-        let result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, data);
+        let result = await this.client.tasks.searchTasksForWorkspace(this.workspace, data);
 
         if (result.data.length == 0) {
             core.debug(`findTask: task #${issue_number} not found, waiting 10 seconds and searching again`);
@@ -74610,7 +74610,7 @@ class AsanaClient {
             await sleep(10000);
 
             core.debug(`findTask: searchTasksForWorkspace: ${JSON.stringify(data)}`);
-            result = await this.client.tasks.searchTasksForWorkspace(this.workspace_id, data);
+            result = await this.client.tasks.searchTasksForWorkspace(this.workspace, data);
 
             if (result.data.length == 0) {
                 core.debug(`findTask: task #${issue_number} not found`);
@@ -74637,7 +74637,7 @@ class AsanaClient {
         const task = await this.getTask(task_gid);
         if (task.hasOwnProperty("custom_fields")) {
             for (let custom_field of task.custom_fields) {
-                if (custom_field.gid == this.participants_column_id) {
+                if (custom_field.gid == this.participants_column) {
                     for (let person of custom_field.people_value) {
                         participants.push(person.gid);
                     }
@@ -74658,18 +74658,18 @@ class AsanaClient {
             const task_assignee = await getUser(github_issue.assignee);
 
             let task_custom_fields = {};
-            task_custom_fields[this.github_column_id] = github_issue.number;
+            task_custom_fields[this.github_column] = github_issue.number;
             if (task_assignee == null) {
-                task_custom_fields[this.participants_column_id] = [task_creator];
+                task_custom_fields[this.participants_column] = [task_creator];
             } else {
-                task_custom_fields[this.participants_column_id] = [task_assignee, task_creator];
+                task_custom_fields[this.participants_column] = [task_assignee, task_creator];
             }
 
             core.debug(`createTask: task #${github_issue.number}, title: ${github_issue.title}, url: ${github_issue.url}, creator: ${task_creator}, assignee: ${task_assignee}`);
 
             const data = {
-                'workspace': this.workspace_id,
-                'projects': [this.project_id],
+                'workspace': this.workspace,
+                'projects': [this.project],
                 'name': github_issue.title,
                 'notes': github_issue.url,
                 'assignee': task_assignee,
@@ -74726,8 +74726,8 @@ class AsanaClient {
         }
 
         let task_custom_fields = {};
-        task_custom_fields[this.github_column_id] = github_issue.number;
-        task_custom_fields[this.participants_column_id] = task_participants;
+        task_custom_fields[this.github_column] = github_issue.number;
+        task_custom_fields[this.participants_column] = task_participants;
 
         core.debug(`editTask: task ${task_gid}, issue #${github_issue.number}, title: ${github_issue.title}, assignee: ${task_assignee}, completed: ${task_completed}`);
 
@@ -74755,8 +74755,8 @@ class AsanaClient {
         }
 
         let task_custom_fields = {};
-        task_custom_fields[this.github_column_id] = github_issue_comment.number;
-        task_custom_fields[this.participants_column_id] = task_participants;
+        task_custom_fields[this.github_column] = github_issue_comment.number;
+        task_custom_fields[this.participants_column] = task_participants;
 
         core.debug(`addTaskParticipant: task ${task_gid}, issue #${github_issue_comment.number}, participant: ${task_participant}`);
 
@@ -74789,12 +74789,12 @@ async function run() {
         core.debug(`action: ${action}`);
 
         const asana_secret = core.getInput('asana-secret');
-        const asana_workspace_id = core.getInput('asana-workspace-id');
-        const asana_project_id = core.getInput('asana-project-id');
-        const asana_github_column_id = '1204412546956914';
-        const asana_participants_column_id = '1204488256461384';
+        const asana_workspace = core.getInput('asana-workspace');
+        const asana_project = core.getInput('asana-project');
+        const asana_github_column = '1204412546956914';
+        const asana_participants_column = '1204488256461384';
 
-        const asana_client = new AsanaClient(asana_secret, asana_workspace_id, asana_project_id, asana_github_column_id, asana_participants_column_id);
+        const asana_client = new AsanaClient(asana_secret, asana_workspace, asana_project, asana_github_column, asana_participants_column);
 
         if (action == 'open') {
             await asana_client.createTask(github.context.payload);
